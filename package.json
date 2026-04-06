@@ -1,7 +1,7 @@
 {
   "name": "null-protocol-multi",
   "version": "2.0.0",
-  "description": "NULL PROTOCOL with Multi-User & Credits",
+  "description": "NULL PROTOCOL with Admin 4-Field Login & User Credits",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
