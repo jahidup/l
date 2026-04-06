@@ -13,39 +13,51 @@
         button { background: linear-gradient(135deg, #00E1FF, #00FFC6); color: #020617; font-weight: bold; cursor: pointer; }
         .error { color: #FB7185; font-size: 14px; }
         .credit-badge { background: #22C55E20; padding: 8px 16px; border-radius: 40px; display: inline-block; margin-bottom: 20px; }
-        .result { background: #020617; padding: 15px; border-radius: 12px; white-space: pre-wrap; font-family: monospace; font-size: 12px; margin-top: 20px; }
+        .result { background: #020617; padding: 15px; border-radius: 12px; white-space: pre-wrap; font-family: monospace; font-size: 12px; margin-top: 20px; max-height: 400px; overflow: auto; }
         .admin-link { text-align: center; margin-top: 20px; }
         a { color: #00E1FF; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 <div id="loginDiv" class="login-container">
-    <h1>🔐 NULL PROTOCOL LOGIN</h1>
+    <h1>🔐 NULL PROTOCOL - User Login</h1>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button id="loginBtn">Login</button>
     <div id="loginError" class="error"></div>
-    <div class="admin-link">Admin? <a href="/admin.html">Go to Admin Panel</a></div>
+    <div class="admin-link">Admin? <a href="/admin.html">Go to Admin Panel (4-field login)</a></div>
 </div>
 
 <div id="appDiv" class="app-container" style="display:none;">
-    <h1>🔍 NULL PROTOCOL SEARCH</h1>
-    <div class="credit-badge">💰 Credits Remaining: <span id="credits">0</span></div>
+    <div class="nav">
+        <div class="credit-badge">💰 Credits: <span id="credits">0</span></div>
+        <button id="logoutBtn" style="width: auto; padding: 6px 12px;">Logout</button>
+    </div>
+    <h1>🔍 Search</h1>
     <select id="apiType">
-        <option value="phone">Phone Lookup</option>
-        <option value="aadhaar">Aadhaar Lookup</option>
-        <option value="vehicle">Vehicle RC</option>
-        <option value="ifsc">IFSC Lookup</option>
-        <option value="email">Email Lookup</option>
-        <option value="pincode">Pincode Lookup</option>
-        <option value="gst">GST Lookup</option>
-        <option value="ip_info">IP Info</option>
-        <option value="ff_info">Free Fire Info</option>
+        <option value="phone">📱 Phone Lookup</option>
+        <option value="aadhaar">🆔 Aadhaar Lookup</option>
+        <option value="ration">🍚 Ration Card</option>
+        <option value="vehicle">🚗 Vehicle RC</option>
+        <option value="vehicle_chalan">📜 Vehicle Challan</option>
+        <option value="vehicle_pro">🏍️ Vehicle Pro</option>
+        <option value="ifsc">🏦 IFSC Lookup</option>
+        <option value="email">📧 Email Lookup</option>
+        <option value="pincode">📍 Pincode Lookup</option>
+        <option value="gst">📄 GST Lookup</option>
+        <option value="tg_to_num">📱 Telegram to Number</option>
+        <option value="ip_info">🌐 IP Info</option>
+        <option value="ff_info">🎮 Free Fire Info</option>
+        <option value="ff_ban">🚫 Free Fire Ban</option>
+        <option value="tg_info_pro">📡 Telegram Info Pro</option>
+        <option value="tg_info">📡 Telegram Info</option>
+        <option value="insta_info">📷 Instagram Info</option>
+        <option value="github_info">🐙 GitHub Info</option>
     </select>
-    <input type="text" id="query" placeholder="Enter search value">
+    <input type="text" id="query" placeholder="Enter search value (e.g., 9876543210)">
     <button id="searchBtn">🔎 Search (1 credit)</button>
     <div id="searchResult" class="result">Waiting for search...</div>
-    <button id="logoutBtn" style="background:#334155; margin-top:20px;">Logout</button>
 </div>
 
 <script>
@@ -61,8 +73,12 @@
     const resultDiv = document.getElementById('searchResult');
 
     loginBtn.onclick = async () => {
-        const username = document.getElementById('username').value;
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
+        if (!username || !password) {
+            document.getElementById('loginError').innerText = 'Enter username and password';
+            return;
+        }
         const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -71,10 +87,11 @@
         const data = await res.json();
         if (res.ok) {
             token = data.token;
-            localStorage.setItem('token', token);
+            localStorage.setItem('userToken', token);
             creditsSpan.innerText = data.credits;
             loginDiv.style.display = 'none';
             appDiv.style.display = 'block';
+            document.getElementById('loginError').innerText = '';
         } else {
             document.getElementById('loginError').innerText = data.error;
         }
@@ -83,41 +100,57 @@
     searchBtn.onclick = async () => {
         if (!token) return;
         const query = queryInput.value.trim();
-        if (!query) return alert('Enter search value');
-        resultDiv.innerHTML = 'Searching...';
-        const res = await fetch('/api/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ apiType: apiType.value, query })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            creditsSpan.innerText = data.credits_left;
-            resultDiv.innerHTML = JSON.stringify(data.data, null, 2);
-        } else {
-            resultDiv.innerHTML = `Error: ${data.error}`;
+        if (!query) {
+            resultDiv.innerHTML = '⚠️ Please enter a search value';
+            return;
+        }
+        resultDiv.innerHTML = '⏳ Searching... (1 credit will be deducted)';
+        try {
+            const res = await fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ apiType: apiType.value, query })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                creditsSpan.innerText = data.credits_left;
+                resultDiv.innerHTML = JSON.stringify(data.data, null, 2);
+            } else {
+                resultDiv.innerHTML = `❌ Error: ${data.error}`;
+                if (data.error === 'Insufficient credits') {
+                    setTimeout(() => { window.location.reload(); }, 2000);
+                }
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `❌ Network error: ${err.message}`;
         }
     };
 
     logoutBtn.onclick = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('userToken');
         location.reload();
     };
 
     // Auto-login if token exists
-    const savedToken = localStorage.getItem('token');
+    const savedToken = localStorage.getItem('userToken');
     if (savedToken) {
         token = savedToken;
-        // verify token by fetching user info (optional)
-        fetch('/api/search', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ apiType: 'phone', query: 'dummy' }) })
+        fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
-                if (data.error && data.error === 'Invalid token') throw new Error();
-                loginDiv.style.display = 'none';
-                appDiv.style.display = 'block';
-                creditsSpan.innerText = data.credits_left || '?';
-            }).catch(() => localStorage.removeItem('token'));
+                if (data.credits !== undefined) {
+                    creditsSpan.innerText = data.credits;
+                    loginDiv.style.display = 'none';
+                    appDiv.style.display = 'block';
+                } else {
+                    localStorage.removeItem('userToken');
+                }
+            })
+            .catch(() => localStorage.removeItem('userToken'));
     }
+
+    queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
+    document.getElementById('password').addEventListener('keypress', (e) => { if (e.key === 'Enter') loginBtn.click(); });
 </script>
 </body>
 </html>
