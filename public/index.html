@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NULL PROTOCOL - User Panel</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui; background: #050814; color: #E5F0FF; margin: 0; padding: 20px; }
+        .login-container, .app-container { max-width: 800px; margin: 50px auto; background: rgba(15,23,42,0.95); border-radius: 16px; padding: 30px; border: 1px solid rgba(148,163,184,0.4); }
+        h1 { text-align: center; color: #00E1FF; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 40px; border: 1px solid #334155; background: #020617; color: white; }
+        button { background: linear-gradient(135deg, #00E1FF, #00FFC6); color: #020617; font-weight: bold; cursor: pointer; }
+        .error { color: #FB7185; font-size: 14px; }
+        .credit-badge { background: #22C55E20; padding: 8px 16px; border-radius: 40px; display: inline-block; margin-bottom: 20px; }
+        .result { background: #020617; padding: 15px; border-radius: 12px; white-space: pre-wrap; font-family: monospace; font-size: 12px; margin-top: 20px; }
+        .admin-link { text-align: center; margin-top: 20px; }
+        a { color: #00E1FF; }
+    </style>
+</head>
+<body>
+<div id="loginDiv" class="login-container">
+    <h1>🔐 NULL PROTOCOL LOGIN</h1>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <div id="loginError" class="error"></div>
+    <div class="admin-link">Admin? <a href="/admin.html">Go to Admin Panel</a></div>
+</div>
+
+<div id="appDiv" class="app-container" style="display:none;">
+    <h1>🔍 NULL PROTOCOL SEARCH</h1>
+    <div class="credit-badge">💰 Credits Remaining: <span id="credits">0</span></div>
+    <select id="apiType">
+        <option value="phone">Phone Lookup</option>
+        <option value="aadhaar">Aadhaar Lookup</option>
+        <option value="vehicle">Vehicle RC</option>
+        <option value="ifsc">IFSC Lookup</option>
+        <option value="email">Email Lookup</option>
+        <option value="pincode">Pincode Lookup</option>
+        <option value="gst">GST Lookup</option>
+        <option value="ip_info">IP Info</option>
+        <option value="ff_info">Free Fire Info</option>
+    </select>
+    <input type="text" id="query" placeholder="Enter search value">
+    <button id="searchBtn">🔎 Search (1 credit)</button>
+    <div id="searchResult" class="result">Waiting for search...</div>
+    <button id="logoutBtn" style="background:#334155; margin-top:20px;">Logout</button>
+</div>
+
+<script>
+    let token = null;
+    const loginDiv = document.getElementById('loginDiv');
+    const appDiv = document.getElementById('appDiv');
+    const creditsSpan = document.getElementById('credits');
+    const loginBtn = document.getElementById('loginBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const apiType = document.getElementById('apiType');
+    const queryInput = document.getElementById('query');
+    const resultDiv = document.getElementById('searchResult');
+
+    loginBtn.onclick = async () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            token = data.token;
+            localStorage.setItem('token', token);
+            creditsSpan.innerText = data.credits;
+            loginDiv.style.display = 'none';
+            appDiv.style.display = 'block';
+        } else {
+            document.getElementById('loginError').innerText = data.error;
+        }
+    };
+
+    searchBtn.onclick = async () => {
+        if (!token) return;
+        const query = queryInput.value.trim();
+        if (!query) return alert('Enter search value');
+        resultDiv.innerHTML = 'Searching...';
+        const res = await fetch('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ apiType: apiType.value, query })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            creditsSpan.innerText = data.credits_left;
+            resultDiv.innerHTML = JSON.stringify(data.data, null, 2);
+        } else {
+            resultDiv.innerHTML = `Error: ${data.error}`;
+        }
+    };
+
+    logoutBtn.onclick = () => {
+        localStorage.removeItem('token');
+        location.reload();
+    };
+
+    // Auto-login if token exists
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+        token = savedToken;
+        // verify token by fetching user info (optional)
+        fetch('/api/search', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ apiType: 'phone', query: 'dummy' }) })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error && data.error === 'Invalid token') throw new Error();
+                loginDiv.style.display = 'none';
+                appDiv.style.display = 'block';
+                creditsSpan.innerText = data.credits_left || '?';
+            }).catch(() => localStorage.removeItem('token'));
+    }
+</script>
+</body>
+</html>
