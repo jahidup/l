@@ -4,58 +4,100 @@
     <meta charset="UTF-8">
     <title>Admin Panel - NULL PROTOCOL</title>
     <style>
-        body { background: #050814; color: #E5F0FF; font-family: monospace; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; background: #0F172A; }
+        body { background: #050814; color: #E5F0FF; font-family: 'Segoe UI', monospace; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1, h2 { color: #00E1FF; }
+        .login-card, .admin-card { background: #0F172A; padding: 30px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #334155; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #020617; color: white; }
+        button { background: linear-gradient(135deg, #00E1FF, #00FFC6); color: #020617; font-weight: bold; cursor: pointer; width: auto; padding: 8px 16px; }
+        button.danger { background: #FB7185; }
+        table { width: 100%; border-collapse: collapse; background: #0F172A; margin-top: 15px; }
         th, td { border: 1px solid #334155; padding: 8px; text-align: left; }
-        button { background: #00E1FF; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 6px; }
-        input, select { background: #020617; color: white; border: 1px solid #334155; padding: 6px; margin: 4px; }
-        .form-card { background: #0F172A; padding: 20px; margin-bottom: 20px; border-radius: 12px; }
+        .error { color: #FB7185; }
+        .success { color: #22C55E; }
     </style>
 </head>
 <body>
-<h1>👑 Admin Panel - User Management</h1>
-<div class="form-card">
-    <h3>➕ Add New User</h3>
-    <input type="text" id="newUser" placeholder="Username">
-    <input type="password" id="newPass" placeholder="Password">
-    <input type="number" id="newCredits" placeholder="Credits" value="10">
-    <label><input type="checkbox" id="newBlocked"> Blocked</label>
-    <label><input type="checkbox" id="newAdmin"> Admin</label>
-    <button id="addUserBtn">Add User</button>
-</div>
+<div class="container">
+    <div id="adminLoginDiv" class="login-card">
+        <h1>👑 Admin Login (4-Field)</h1>
+        <input type="text" id="adminUser" placeholder="Admin ID">
+        <input type="password" id="adminPass" placeholder="Password">
+        <input type="text" id="adminPin" placeholder="4-digit PIN" maxlength="4">
+        <input type="text" id="adminKey" placeholder="Security Key">
+        <button id="adminLoginBtn">Login</button>
+        <div id="adminLoginError" class="error"></div>
+        <div style="margin-top: 15px;"><a href="/">← Back to User Panel</a></div>
+    </div>
 
-<div class="form-card">
-    <h3>📋 All Users</h3>
-    <table id="userTable">
-        <thead><tr><th>ID</th><th>Username</th><th>Credits</th><th>Blocked</th><th>Admin</th><th>Actions</th></tr></thead>
-        <tbody></tbody>
-    </table>
+    <div id="adminPanelDiv" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>👑 Admin Panel</h1>
+            <button id="logoutAdminBtn">Logout</button>
+        </div>
+        <div id="adminMsg"></div>
+
+        <div class="admin-card">
+            <h2>➕ Add New User</h2>
+            <input type="text" id="newUser" placeholder="Username">
+            <input type="password" id="newPass" placeholder="Password">
+            <input type="number" id="newCredits" placeholder="Credits" value="10">
+            <label><input type="checkbox" id="newBlocked"> Blocked</label>
+            <button id="addUserBtn">Add User</button>
+        </div>
+
+        <div class="admin-card">
+            <h2>📋 All Users</h2>
+            <table id="userTable">
+                <thead><tr><th>ID</th><th>Username</th><th>Credits</th><th>Blocked</th><th>Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
     let adminToken = localStorage.getItem('adminToken');
-    if (!adminToken) {
-        const login = prompt('Admin Login - Enter your admin username and password (format: username:password)');
-        if (login) {
-            const [username, password] = login.split(':');
-            fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            }).then(res => res.json()).then(data => {
-                if (data.token && data.is_admin) {
-                    adminToken = data.token;
-                    localStorage.setItem('adminToken', adminToken);
-                    loadUsers();
-                } else alert('Invalid admin credentials');
-            });
-        }
-    } else {
+
+    if (adminToken) {
+        document.getElementById('adminLoginDiv').style.display = 'none';
+        document.getElementById('adminPanelDiv').style.display = 'block';
         loadUsers();
     }
 
+    document.getElementById('adminLoginBtn').onclick = async () => {
+        const username = document.getElementById('adminUser').value.trim();
+        const password = document.getElementById('adminPass').value;
+        const pin = document.getElementById('adminPin').value.trim();
+        const securityKey = document.getElementById('adminKey').value.trim();
+        if (!username || !password || !pin || !securityKey) {
+            document.getElementById('adminLoginError').innerText = 'All 4 fields required';
+            return;
+        }
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, pin, securityKey })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            adminToken = data.token;
+            localStorage.setItem('adminToken', adminToken);
+            document.getElementById('adminLoginDiv').style.display = 'none';
+            document.getElementById('adminPanelDiv').style.display = 'block';
+            loadUsers();
+        } else {
+            document.getElementById('adminLoginError').innerText = data.error || 'Invalid credentials';
+        }
+    };
+
     async function loadUsers() {
         const res = await fetch('/admin/users', { headers: { 'Authorization': `Bearer ${adminToken}` } });
+        if (res.status === 401) {
+            localStorage.removeItem('adminToken');
+            location.reload();
+            return;
+        }
         const users = await res.json();
         const tbody = document.querySelector('#userTable tbody');
         tbody.innerHTML = '';
@@ -65,44 +107,61 @@
             row.insertCell(1).innerText = u.username;
             row.insertCell(2).innerHTML = `<input type="number" id="cred_${u.id}" value="${u.credits}" style="width:80px">`;
             row.insertCell(3).innerHTML = `<input type="checkbox" id="block_${u.id}" ${u.is_blocked ? 'checked' : ''}>`;
-            row.insertCell(4).innerText = u.is_admin ? 'Yes' : 'No';
-            row.insertCell(5).innerHTML = `<button onclick="updateUser(${u.id})">Update</button>
-                                           ${!u.is_admin ? `<button onclick="deleteUser(${u.id})">Delete</button>` : ''}`;
+            row.insertCell(4).innerHTML = `<button onclick="updateUser(${u.id})">Update</button>
+                                           <button class="danger" onclick="deleteUser(${u.id})">Delete</button>`;
         });
     }
 
     window.updateUser = async (id) => {
         const credits = document.getElementById(`cred_${id}`).value;
         const is_blocked = document.getElementById(`block_${id}`).checked;
-        await fetch(`/admin/user/${id}`, {
+        const res = await fetch(`/admin/user/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
             body: JSON.stringify({ credits: parseInt(credits), is_blocked })
         });
-        loadUsers();
+        if (res.ok) {
+            document.getElementById('adminMsg').innerHTML = '<div class="success">✅ User updated</div>';
+            setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 2000);
+            loadUsers();
+        } else {
+            alert('Update failed');
+        }
     };
 
     window.deleteUser = async (id) => {
-        if (confirm('Delete user?')) {
+        if (confirm('Delete this user?')) {
             await fetch(`/admin/user/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } });
             loadUsers();
         }
     };
 
     document.getElementById('addUserBtn').onclick = async () => {
-        const username = document.getElementById('newUser').value;
+        const username = document.getElementById('newUser').value.trim();
         const password = document.getElementById('newPass').value;
         const credits = parseInt(document.getElementById('newCredits').value);
         const is_blocked = document.getElementById('newBlocked').checked;
-        const is_admin = document.getElementById('newAdmin').checked;
-        await fetch('/admin/user', {
+        if (!username || !password) return alert('Username and password required');
+        const res = await fetch('/admin/user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-            body: JSON.stringify({ username, password, credits, is_blocked, is_admin })
+            body: JSON.stringify({ username, password, credits, is_blocked })
         });
-        loadUsers();
-        document.getElementById('newUser').value = '';
-        document.getElementById('newPass').value = '';
+        if (res.ok) {
+            loadUsers();
+            document.getElementById('newUser').value = '';
+            document.getElementById('newPass').value = '';
+            document.getElementById('newCredits').value = 10;
+            document.getElementById('newBlocked').checked = false;
+        } else {
+            const err = await res.json();
+            alert(err.error);
+        }
+    };
+
+    document.getElementById('logoutAdminBtn').onclick = () => {
+        localStorage.removeItem('adminToken');
+        location.reload();
     };
 </script>
 </body>
