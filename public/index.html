@@ -1,156 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NULL PROTOCOL - User Panel</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui; background: #050814; color: #E5F0FF; margin: 0; padding: 20px; }
-        .login-container, .app-container { max-width: 800px; margin: 50px auto; background: rgba(15,23,42,0.95); border-radius: 16px; padding: 30px; border: 1px solid rgba(148,163,184,0.4); }
-        h1 { text-align: center; color: #00E1FF; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 40px; border: 1px solid #334155; background: #020617; color: white; }
-        button { background: linear-gradient(135deg, #00E1FF, #00FFC6); color: #020617; font-weight: bold; cursor: pointer; }
-        .error { color: #FB7185; font-size: 14px; }
-        .credit-badge { background: #22C55E20; padding: 8px 16px; border-radius: 40px; display: inline-block; margin-bottom: 20px; }
-        .result { background: #020617; padding: 15px; border-radius: 12px; white-space: pre-wrap; font-family: monospace; font-size: 12px; margin-top: 20px; max-height: 400px; overflow: auto; }
-        .admin-link { text-align: center; margin-top: 20px; }
-        a { color: #00E1FF; }
-        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>NULL PROTOCOL | Premium Intelligence</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, rgba(5, 8, 20, 1) 0%, #0a0f1f 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: #f0f3fa;
+      min-height: 100vh;
+      padding: 1.5rem;
+      /* ensures zoom works cleanly */
+      zoom: 0.8;
+      -moz-transform: scale(0.8);
+      -moz-transform-origin: top left;
+    }
+
+    /* responsive container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* glassmorphic card */
+    .card {
+      background: rgba(15, 25, 45, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 225, 255, 0.3);
+      padding: 2rem;
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+    }
+
+    /* header */
+    .logo {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00e1ff, #00ffc6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .badge {
+      background: rgba(34, 197, 94, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-weight: 500;
+      border-left: 3px solid #22c55e;
+    }
+
+    /* inputs & selects */
+    input, select, button {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      margin: 0.6rem 0;
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid #2d3a5e;
+      border-radius: 1.5rem;
+      color: white;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #00e1ff;
+      box-shadow: 0 0 8px rgba(0,225,255,0.3);
+    }
+    button {
+      background: linear-gradient(95deg, #00e1ff, #00ffc6);
+      color: #020617;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      font-size: 1.05rem;
+    }
+    button:hover {
+      transform: scale(1.01);
+      filter: brightness(1.05);
+    }
+
+    /* result panel */
+    .result-box {
+      background: #010314;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      border: 1px solid #2d3a5e;
+      max-height: 500px;
+    }
+
+    /* animations */
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate {
+      animation: fadeSlide 0.4s ease;
+    }
+
+    /* responsive grid */
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 1rem; zoom: 0.7; }
+      .card { padding: 1.2rem; }
+      .logo { font-size: 1.5rem; }
+    }
+  </style>
 </head>
 <body>
-<div id="loginDiv" class="login-container">
-    <h1>🔐 NULL PROTOCOL - User Login</h1>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
-    <div id="loginError" class="error"></div>
-    <div class="admin-link">Admin? <a href="/admin.html">Go to Admin Panel (4-field login)</a></div>
-</div>
-
-<div id="appDiv" class="app-container" style="display:none;">
-    <div class="nav">
-        <div class="credit-badge">💰 Credits: <span id="credits">0</span></div>
-        <button id="logoutBtn" style="width: auto; padding: 6px 12px;">Logout</button>
+<div class="container">
+  <!-- LOGIN CARD -->
+  <div id="loginCard" class="card" style="max-width: 500px; margin: 10vh auto;">
+    <div class="logo" style="text-align: center; margin-bottom: 1rem;">⚡ NULL PROTOCOL</div>
+    <h2 style="text-align: center; margin-bottom: 1.5rem;">Sign in</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button id="doLoginBtn">Access Intelligence →</button>
+    <div id="loginError" style="color: #fb7185; margin-top: 1rem; text-align: center;"></div>
+    <div style="text-align: center; margin-top: 1.5rem;">
+      <a href="/admin.html" style="color: #00e1ff; text-decoration: none;">🔐 Admin (4‑field)</a>
     </div>
-    <h1>🔍 Search</h1>
-    <select id="apiType">
-        <option value="phone">📱 Phone Lookup</option>
-        <option value="aadhaar">🆔 Aadhaar Lookup</option>
-        <option value="ration">🍚 Ration Card</option>
-        <option value="vehicle">🚗 Vehicle RC</option>
-        <option value="vehicle_chalan">📜 Vehicle Challan</option>
-        <option value="vehicle_pro">🏍️ Vehicle Pro</option>
-        <option value="ifsc">🏦 IFSC Lookup</option>
-        <option value="email">📧 Email Lookup</option>
-        <option value="pincode">📍 Pincode Lookup</option>
-        <option value="gst">📄 GST Lookup</option>
-        <option value="tg_to_num">📱 Telegram to Number</option>
-        <option value="ip_info">🌐 IP Info</option>
-        <option value="ff_info">🎮 Free Fire Info</option>
-        <option value="ff_ban">🚫 Free Fire Ban</option>
-        <option value="tg_info_pro">📡 Telegram Info Pro</option>
-        <option value="tg_info">📡 Telegram Info</option>
-        <option value="insta_info">📷 Instagram Info</option>
-        <option value="github_info">🐙 GitHub Info</option>
-    </select>
-    <input type="text" id="query" placeholder="Enter search value (e.g., 9876543210)">
-    <button id="searchBtn">🔎 Search (1 credit)</button>
-    <div id="searchResult" class="result">Waiting for search...</div>
+  </div>
+
+  <!-- DASHBOARD CARD (hidden initially) -->
+  <div id="dashboard" style="display: none;">
+    <div class="flex-between" style="margin-bottom: 1.5rem;">
+      <div class="logo">⚡ NULL PROTOCOL</div>
+      <div class="badge">💰 <span id="creditsDisplay">0</span> credits</div>
+      <button id="logoutBtn" style="width: auto; padding: 0.5rem 1.2rem;">Logout</button>
+    </div>
+    <div class="card">
+      <h2>🔍 Deep Search</h2>
+      <select id="apiSelect">
+        <option>Loading APIs...</option>
+      </select>
+      <input type="text" id="searchQuery" placeholder="Enter phone, Aadhaar, vehicle, etc...">
+      <button id="searchNowBtn">🔎 Execute (1 credit)</button>
+      <div id="searchResult" class="result-box" style="margin-top: 1.5rem;">✨ Ready for search</div>
+    </div>
+  </div>
 </div>
 
 <script>
-    let token = null;
-    const loginDiv = document.getElementById('loginDiv');
-    const appDiv = document.getElementById('appDiv');
-    const creditsSpan = document.getElementById('credits');
-    const loginBtn = document.getElementById('loginBtn');
-    const searchBtn = document.getElementById('searchBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const apiType = document.getElementById('apiType');
-    const queryInput = document.getElementById('query');
-    const resultDiv = document.getElementById('searchResult');
+  let authToken = localStorage.getItem('userToken');
+  const loginDiv = document.getElementById('loginCard');
+  const dashboard = document.getElementById('dashboard');
+  const creditsSpan = document.getElementById('creditsDisplay');
 
-    loginBtn.onclick = async () => {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        if (!username || !password) {
-            document.getElementById('loginError').innerText = 'Enter username and password';
-            return;
-        }
-        const res = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+  async function loadApiTypes() {
+    try {
+      const res = await fetch('/api/api-types', { headers: { 'Authorization': `Bearer ${authToken}` } });
+      const data = await res.json();
+      const select = document.getElementById('apiSelect');
+      select.innerHTML = '';
+      if (data.length === 0) {
+        select.innerHTML = '<option>No APIs available</option>';
+      } else {
+        data.forEach(api => {
+          const opt = document.createElement('option');
+          opt.value = api.type;
+          opt.textContent = api.type.toUpperCase() + ' — ' + (api.description || '');
+          select.appendChild(opt);
         });
-        const data = await res.json();
-        if (res.ok) {
-            token = data.token;
-            localStorage.setItem('userToken', token);
-            creditsSpan.innerText = data.credits;
-            loginDiv.style.display = 'none';
-            appDiv.style.display = 'block';
-            document.getElementById('loginError').innerText = '';
-        } else {
-            document.getElementById('loginError').innerText = data.error;
-        }
-    };
+      }
+    } catch(e) { console.error(e); }
+  }
 
-    searchBtn.onclick = async () => {
-        if (!token) return;
-        const query = queryInput.value.trim();
-        if (!query) {
-            resultDiv.innerHTML = '⚠️ Please enter a search value';
-            return;
-        }
-        resultDiv.innerHTML = '⏳ Searching... (1 credit will be deducted)';
-        try {
-            const res = await fetch('/api/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ apiType: apiType.value, query })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                creditsSpan.innerText = data.credits_left;
-                resultDiv.innerHTML = JSON.stringify(data.data, null, 2);
-            } else {
-                resultDiv.innerHTML = `❌ Error: ${data.error}`;
-                if (data.error === 'Insufficient credits') {
-                    setTimeout(() => { window.location.reload(); }, 2000);
-                }
-            }
-        } catch (err) {
-            resultDiv.innerHTML = `❌ Network error: ${err.message}`;
-        }
-    };
+  async function updateCredits() {
+    const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${authToken}` } });
+    const data = await res.json();
+    if (data.credits !== undefined) creditsSpan.innerText = data.credits;
+    else if (data.error === 'Invalid token') logout();
+  }
 
-    logoutBtn.onclick = () => {
-        localStorage.removeItem('userToken');
-        location.reload();
-    };
+  function logout() {
+    localStorage.removeItem('userToken');
+    window.location.reload();
+  }
 
-    // Auto-login if token exists
-    const savedToken = localStorage.getItem('userToken');
-    if (savedToken) {
-        token = savedToken;
-        fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
-            .then(data => {
-                if (data.credits !== undefined) {
-                    creditsSpan.innerText = data.credits;
-                    loginDiv.style.display = 'none';
-                    appDiv.style.display = 'block';
-                } else {
-                    localStorage.removeItem('userToken');
-                }
-            })
-            .catch(() => localStorage.removeItem('userToken'));
+  document.getElementById('doLoginBtn').onclick = async () => {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!username || !password) return document.getElementById('loginError').innerText = 'Both fields required';
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      authToken = data.token;
+      localStorage.setItem('userToken', authToken);
+      loginDiv.style.display = 'none';
+      dashboard.style.display = 'block';
+      await loadApiTypes();
+      await updateCredits();
+    } else {
+      document.getElementById('loginError').innerText = data.error;
     }
+  };
 
-    queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchBtn.click(); });
-    document.getElementById('password').addEventListener('keypress', (e) => { if (e.key === 'Enter') loginBtn.click(); });
+  document.getElementById('searchNowBtn').onclick = async () => {
+    const apiType = document.getElementById('apiSelect').value;
+    const query = document.getElementById('searchQuery').value.trim();
+    if (!query) return alert('Enter search value');
+    const resultDiv = document.getElementById('searchResult');
+    resultDiv.innerHTML = '⏳ Processing request... (1 credit)';
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ apiType, query })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        creditsSpan.innerText = data.credits_left;
+        resultDiv.innerHTML = `<pre>${JSON.stringify(data.data, null, 2)}</pre>`;
+      } else {
+        resultDiv.innerHTML = `❌ ${data.error}`;
+        if (data.error === 'Insufficient credits') setTimeout(() => logout(), 1500);
+      }
+    } catch (err) {
+      resultDiv.innerHTML = `⚠️ Network error: ${err.message}`;
+    }
+  };
+
+  document.getElementById('logoutBtn').onclick = logout;
+
+  // Auto login
+  if (authToken) {
+    fetch('/api/me', { headers: { 'Authorization': `Bearer ${authToken}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data.credits !== undefined) {
+          loginDiv.style.display = 'none';
+          dashboard.style.display = 'block';
+          loadApiTypes();
+          creditsSpan.innerText = data.credits;
+        } else {
+          localStorage.removeItem('userToken');
+        }
+      }).catch(() => localStorage.removeItem('userToken'));
+  }
 </script>
 </body>
 </html>
