@@ -1,168 +1,608 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Panel - NULL PROTOCOL</title>
-    <style>
-        body { background: #050814; color: #E5F0FF; font-family: 'Segoe UI', monospace; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; }
-        h1, h2 { color: #00E1FF; }
-        .login-card, .admin-card { background: #0F172A; padding: 30px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #334155; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #020617; color: white; }
-        button { background: linear-gradient(135deg, #00E1FF, #00FFC6); color: #020617; font-weight: bold; cursor: pointer; width: auto; padding: 8px 16px; }
-        button.danger { background: #FB7185; }
-        table { width: 100%; border-collapse: collapse; background: #0F172A; margin-top: 15px; }
-        th, td { border: 1px solid #334155; padding: 8px; text-align: left; }
-        .error { color: #FB7185; }
-        .success { color: #22C55E; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>NULL PROTOCOL | Admin Nexus</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 30%, #050814, #0a0f1f);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: #eef2ff;
+      padding: 1.5rem;
+      zoom: 0.8;
+      -moz-transform: scale(0.8);
+      -moz-transform-origin: top left;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* glass card */
+    .card {
+      background: rgba(10, 20, 35, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 225, 255, 0.25);
+      padding: 1.8rem;
+      margin-bottom: 2rem;
+      transition: all 0.2s;
+    }
+
+    h1, h2, h3 {
+      background: linear-gradient(135deg, #00e1ff, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h3 { font-size: 1.2rem; margin-bottom: 0.8rem; }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0;
+      background: #010314cc;
+      border: 1px solid #2d3a5e;
+      border-radius: 1.2rem;
+      color: white;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #00e1ff;
+      box-shadow: 0 0 6px #00e1ff80;
+    }
+
+    button {
+      background: linear-gradient(95deg, #00e1ff, #00c3a0);
+      color: #020617;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      width: auto;
+      padding: 0.7rem 1.4rem;
+      margin-right: 0.5rem;
+    }
+
+    button.danger {
+      background: linear-gradient(95deg, #fb7185, #e11d48);
+      color: white;
+    }
+
+    button.success {
+      background: linear-gradient(95deg, #22c55e, #16a34a);
+      color: white;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: #010314aa;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      text-align: center;
+      border-left: 4px solid #00e1ff;
+    }
+
+    .stat-card p {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00e1ff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      overflow-x: auto;
+      display: block;
+    }
+
+    th, td {
+      border: 1px solid #2d3a5e;
+      padding: 0.7rem;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #00e1ff20;
+      color: #00e1ff;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      background: #1e293b;
+      padding: 0.6rem 1.4rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tab.active {
+      background: #00e1ff;
+      color: #020617;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fade 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #0f172a;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      border: 1px solid #00e1ff;
+    }
+
+    .close {
+      float: right;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+
+    .msg {
+      padding: 0.8rem;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+    }
+    .msg.success { background: #22c55e30; border-left: 4px solid #22c55e; }
+    .msg.error { background: #fb718530; border-left: 4px solid #fb7185; }
+
+    @media (max-width: 700px) {
+      body { padding: 1rem; zoom: 0.7; }
+      button { padding: 0.5rem 1rem; }
+    }
+  </style>
 </head>
 <body>
 <div class="container">
-    <div id="adminLoginDiv" class="login-card">
-        <h1>👑 Admin Login (4-Field)</h1>
-        <input type="text" id="adminUser" placeholder="Admin ID">
-        <input type="password" id="adminPass" placeholder="Password">
-        <input type="text" id="adminPin" placeholder="4-digit PIN" maxlength="4">
-        <input type="text" id="adminKey" placeholder="Security Key">
-        <button id="adminLoginBtn">Login</button>
-        <div id="adminLoginError" class="error"></div>
-        <div style="margin-top: 15px;"><a href="/">← Back to User Panel</a></div>
+  <!-- LOGIN CARD -->
+  <div id="loginCard" class="card" style="max-width: 500px; margin: 8vh auto;">
+    <h1 style="text-align: center;">👑 ADMIN NEXUS</h1>
+    <p style="text-align: center; margin-bottom: 1.5rem;">4‑field authentication</p>
+    <input type="text" id="adminUser" placeholder="Admin ID">
+    <input type="password" id="adminPass" placeholder="Password">
+    <input type="text" id="adminPin" placeholder="4‑digit PIN" maxlength="4">
+    <input type="text" id="adminKey" placeholder="Security Key">
+    <button id="adminLoginBtn" style="width: 100%;">Unlock Panel →</button>
+    <div id="loginError" class="msg error" style="display: none;"></div>
+    <div style="text-align: center; margin-top: 1rem;"><a href="/" style="color:#00e1ff;">← Back to User Portal</a></div>
+  </div>
+
+  <!-- ADMIN PANEL (hidden) -->
+  <div id="adminPanel" style="display: none;">
+    <div class="flex-between" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <h1>⚡ NULL PROTOCOL • Admin Nexus</h1>
+      <button id="logoutAdminBtn" class="danger">Exit</button>
+    </div>
+    <div id="adminMsg"></div>
+
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><h3>👥 Users</h3><p id="totalUsers">—</p></div>
+      <div class="stat-card"><h3>💰 Credits Pool</h3><p id="totalCredits">—</p></div>
+      <div class="stat-card"><h3>🔎 Total Searches</h3><p id="totalSearches">—</p></div>
     </div>
 
-    <div id="adminPanelDiv" style="display:none;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>👑 Admin Panel</h1>
-            <button id="logoutAdminBtn">Logout</button>
-        </div>
-        <div id="adminMsg"></div>
-
-        <div class="admin-card">
-            <h2>➕ Add New User</h2>
-            <input type="text" id="newUser" placeholder="Username">
-            <input type="password" id="newPass" placeholder="Password">
-            <input type="number" id="newCredits" placeholder="Credits" value="10">
-            <label><input type="checkbox" id="newBlocked"> Blocked</label>
-            <button id="addUserBtn">Add User</button>
-        </div>
-
-        <div class="admin-card">
-            <h2>📋 All Users</h2>
-            <table id="userTable">
-                <thead><tr><th>ID</th><th>Username</th><th>Credits</th><th>Blocked</th><th>Actions</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" data-tab="users">👥 User Management</div>
+      <div class="tab" data-tab="apis">🔌 API Manager</div>
+      <div class="tab" data-tab="logs">📜 Search Logs</div>
     </div>
+
+    <!-- TAB 1: USERS -->
+    <div id="tab-users" class="tab-content active">
+      <div class="card">
+        <h2>➕ Add New User</h2>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="text" id="newUsername" placeholder="Username" style="flex:1">
+          <input type="password" id="newPassword" placeholder="Password" style="flex:1">
+          <input type="number" id="newCredits" placeholder="Credits" value="10" style="width: 120px">
+          <label style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" id="newBlocked"> Blocked</label>
+          <button id="addUserBtn">Create User</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🔍 Search & Bulk Actions</h2>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="text" id="searchUserInput" placeholder="Search by username...">
+          <button id="searchUserBtn">Search</button>
+          <button id="resetSearchBtn">Reset</button>
+          <input type="number" id="bulkCreditsAmount" placeholder="Add credits to all" style="width: 180px">
+          <button id="bulkCreditsBtn">Bulk +Credits</button>
+          <button id="exportUsersBtn" class="success">📥 Export JSON</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📋 All Users</h2>
+        <div style="overflow-x: auto;">
+          <table id="userTable">
+            <thead><tr><th>ID</th><th>Username</th><th>Credits</th><th>Blocked</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: API MANAGER -->
+    <div id="tab-apis" class="tab-content">
+      <div class="card">
+        <h2>➕ Register New API</h2>
+        <input type="text" id="apiType" placeholder="Unique type (e.g., pan_lookup)">
+        <input type="text" id="apiUrl" placeholder="Endpoint URL (use {query})">
+        <input type="text" id="apiDesc" placeholder="Description">
+        <label><input type="checkbox" id="apiEnabled" checked> Enabled</label>
+        <button id="addApiBtn">Add API</button>
+      </div>
+      <div class="card">
+        <h2>🔧 Test Endpoint</h2>
+        <input type="text" id="testUrl" placeholder="URL with {query}">
+        <input type="text" id="testQuery" placeholder="Test value">
+        <button id="testApiBtn">Test Now</button>
+        <div id="testResult" style="margin-top: 1rem; background: #010314; padding: 1rem; border-radius: 1rem; font-family: monospace; font-size: 0.75rem;"></div>
+      </div>
+      <div class="card">
+        <h2>📡 API Configurations</h2>
+        <div style="overflow-x: auto;">
+          <table id="apiTable">
+            <thead><tr><th>ID</th><th>Type</th><th>URL</th><th>Description</th><th>Enabled</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: LOGS -->
+    <div id="tab-logs" class="tab-content">
+      <div class="card">
+        <h2>📜 Search History</h2>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+          <select id="logUserFilter"><option value="">All Users</option></select>
+          <button id="filterLogsBtn">Filter</button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table id="logsTable">
+            <thead><tr><th>ID</th><th>User</th><th>API</th><th>Query</th><th>Timestamp</th><th>Response Preview</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT API MODAL -->
+<div id="editApiModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>✏️ Edit API</h3>
+    <input type="hidden" id="editApiId">
+    <input type="text" id="editApiType" placeholder="Type">
+    <input type="text" id="editApiUrl" placeholder="URL">
+    <input type="text" id="editApiDesc" placeholder="Description">
+    <label><input type="checkbox" id="editApiEnabled"> Enabled</label>
+    <button id="saveApiEditBtn">Save Changes</button>
+  </div>
 </div>
 
 <script>
-    let adminToken = localStorage.getItem('adminToken');
+  let adminToken = localStorage.getItem('adminToken');
+  const loginDiv = document.getElementById('loginCard');
+  const panelDiv = document.getElementById('adminPanel');
 
-    if (adminToken) {
-        document.getElementById('adminLoginDiv').style.display = 'none';
-        document.getElementById('adminPanelDiv').style.display = 'block';
-        loadUsers();
+  // Auto login check
+  if (adminToken) {
+    loginDiv.style.display = 'none';
+    panelDiv.style.display = 'block';
+    loadDashboard();
+    loadUsers();
+    loadApis();
+    loadLogs();
+    loadUserDropdown();
+  }
+
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+      if (tab.dataset.tab === 'logs') loadLogs();
+      if (tab.dataset.tab === 'apis') loadApis();
+    });
+  });
+
+  async function apiCall(endpoint, options = {}) {
+    const res = await fetch(endpoint, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}`, ...options.headers }
+    });
+    if (res.status === 401) { logoutAdmin(); throw new Error('Unauthorized'); }
+    return res.json();
+  }
+
+  function showMsg(msg, type) {
+    const div = document.getElementById('adminMsg');
+    div.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    setTimeout(() => div.innerHTML = '', 3000);
+  }
+
+  async function loadDashboard() {
+    try {
+      const stats = await apiCall('/admin/stats');
+      document.getElementById('totalUsers').innerText = stats.totalUsers;
+      document.getElementById('totalCredits').innerText = stats.totalCredits;
+      document.getElementById('totalSearches').innerText = stats.totalSearches;
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadUsers(search = '') {
+    let url = '/admin/users';
+    if (search) url += `?search=${encodeURIComponent(search)}`;
+    const users = await apiCall(url);
+    const tbody = document.querySelector('#userTable tbody');
+    tbody.innerHTML = '';
+    users.forEach(u => {
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = u.id;
+      row.insertCell(1).innerText = u.username;
+      row.insertCell(2).innerHTML = `<input type="number" id="cred_${u.id}" value="${u.credits}" style="width:80px">`;
+      row.insertCell(3).innerHTML = `<input type="checkbox" id="block_${u.id}" ${u.is_blocked ? 'checked' : ''}>`;
+      row.insertCell(4).innerHTML = `<button onclick="updateUser(${u.id})">Update</button>
+                                     <button class="danger" onclick="deleteUser(${u.id})">Delete</button>`;
+    });
+  }
+
+  window.updateUser = async (id) => {
+    const credits = document.getElementById(`cred_${id}`).value;
+    const is_blocked = document.getElementById(`block_${id}`).checked;
+    await apiCall(`/admin/user/${id}`, { method: 'PUT', body: JSON.stringify({ credits: parseInt(credits), is_blocked }) });
+    showMsg('✅ User updated', 'success');
+    loadDashboard();
+  };
+
+  window.deleteUser = async (id) => {
+    if (confirm('Delete this user permanently?')) {
+      await apiCall(`/admin/user/${id}`, { method: 'DELETE' });
+      loadUsers();
+      loadDashboard();
+      showMsg('🗑️ User deleted', 'success');
     }
+  };
 
-    document.getElementById('adminLoginBtn').onclick = async () => {
-        const username = document.getElementById('adminUser').value.trim();
-        const password = document.getElementById('adminPass').value;
-        const pin = document.getElementById('adminPin').value.trim();
-        const securityKey = document.getElementById('adminKey').value.trim();
-        if (!username || !password || !pin || !securityKey) {
-            document.getElementById('adminLoginError').innerText = 'All 4 fields required';
-            return;
-        }
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, pin, securityKey })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            adminToken = data.token;
-            localStorage.setItem('adminToken', adminToken);
-            document.getElementById('adminLoginDiv').style.display = 'none';
-            document.getElementById('adminPanelDiv').style.display = 'block';
-            loadUsers();
-        } else {
-            document.getElementById('adminLoginError').innerText = data.error || 'Invalid credentials';
-        }
-    };
+  document.getElementById('addUserBtn').onclick = async () => {
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value;
+    const credits = parseInt(document.getElementById('newCredits').value);
+    const is_blocked = document.getElementById('newBlocked').checked;
+    if (!username || !password) return alert('Username & password required');
+    await apiCall('/admin/user', { method: 'POST', body: JSON.stringify({ username, password, credits, is_blocked }) });
+    loadUsers();
+    loadDashboard();
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    showMsg('➕ User created', 'success');
+  };
 
-    async function loadUsers() {
-        const res = await fetch('/admin/users', { headers: { 'Authorization': `Bearer ${adminToken}` } });
-        if (res.status === 401) {
-            localStorage.removeItem('adminToken');
-            location.reload();
-            return;
-        }
-        const users = await res.json();
-        const tbody = document.querySelector('#userTable tbody');
-        tbody.innerHTML = '';
-        users.forEach(u => {
-            const row = tbody.insertRow();
-            row.insertCell(0).innerText = u.id;
-            row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<input type="number" id="cred_${u.id}" value="${u.credits}" style="width:80px">`;
-            row.insertCell(3).innerHTML = `<input type="checkbox" id="block_${u.id}" ${u.is_blocked ? 'checked' : ''}>`;
-            row.insertCell(4).innerHTML = `<button onclick="updateUser(${u.id})">Update</button>
-                                           <button class="danger" onclick="deleteUser(${u.id})">Delete</button>`;
-        });
+  document.getElementById('searchUserBtn').onclick = () => loadUsers(document.getElementById('searchUserInput').value);
+  document.getElementById('resetSearchBtn').onclick = () => { document.getElementById('searchUserInput').value = ''; loadUsers(); };
+  document.getElementById('bulkCreditsBtn').onclick = async () => {
+    const amount = parseInt(document.getElementById('bulkCreditsAmount').value);
+    if (!amount) return alert('Enter amount');
+    await apiCall('/admin/bulk-credits', { method: 'POST', body: JSON.stringify({ amount }) });
+    loadUsers();
+    loadDashboard();
+    showMsg(`✨ Added ${amount} credits to all users`, 'success');
+  };
+  document.getElementById('exportUsersBtn').onclick = async () => {
+    const users = await apiCall('/admin/users');
+    const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'users_export.json'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // API MANAGEMENT
+  async function loadApis() {
+    const apis = await apiCall('/admin/api-configs');
+    const tbody = document.querySelector('#apiTable tbody');
+    tbody.innerHTML = '';
+    apis.forEach(api => {
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = api.id;
+      row.insertCell(1).innerText = api.type;
+      row.insertCell(2).innerHTML = `<span title="${api.url}">${api.url.substring(0, 55)}...</span>`;
+      row.insertCell(3).innerText = api.description || '-';
+      row.insertCell(4).innerHTML = api.enabled ? '✅' : '❌';
+      row.insertCell(5).innerHTML = `<button onclick="editApi(${api.id})">Edit</button>
+                                     <button class="danger" onclick="deleteApi(${api.id})">Delete</button>`;
+    });
+  }
+
+  window.editApi = async (id) => {
+    const apis = await apiCall('/admin/api-configs');
+    const api = apis.find(a => a.id === id);
+    if (api) {
+      document.getElementById('editApiId').value = api.id;
+      document.getElementById('editApiType').value = api.type;
+      document.getElementById('editApiUrl').value = api.url;
+      document.getElementById('editApiDesc').value = api.description || '';
+      document.getElementById('editApiEnabled').checked = api.enabled === 1;
+      document.getElementById('editApiModal').style.display = 'flex';
     }
+  };
 
-    window.updateUser = async (id) => {
-        const credits = document.getElementById(`cred_${id}`).value;
-        const is_blocked = document.getElementById(`block_${id}`).checked;
-        const res = await fetch(`/admin/user/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-            body: JSON.stringify({ credits: parseInt(credits), is_blocked })
-        });
-        if (res.ok) {
-            document.getElementById('adminMsg').innerHTML = '<div class="success">✅ User updated</div>';
-            setTimeout(() => document.getElementById('adminMsg').innerHTML = '', 2000);
-            loadUsers();
-        } else {
-            alert('Update failed');
-        }
-    };
+  document.getElementById('saveApiEditBtn').onclick = async () => {
+    const id = document.getElementById('editApiId').value;
+    const type = document.getElementById('editApiType').value;
+    const url = document.getElementById('editApiUrl').value;
+    const description = document.getElementById('editApiDesc').value;
+    const enabled = document.getElementById('editApiEnabled').checked;
+    await apiCall(`/admin/api-configs/${id}`, { method: 'PUT', body: JSON.stringify({ type, url, description, enabled }) });
+    loadApis();
+    document.getElementById('editApiModal').style.display = 'none';
+    showMsg('API updated', 'success');
+  };
 
-    window.deleteUser = async (id) => {
-        if (confirm('Delete this user?')) {
-            await fetch(`/admin/user/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } });
-            loadUsers();
-        }
-    };
+  window.deleteApi = async (id) => {
+    if (confirm('Delete this API?')) {
+      await apiCall(`/admin/api-configs/${id}`, { method: 'DELETE' });
+      loadApis();
+      showMsg('API deleted', 'success');
+    }
+  };
 
-    document.getElementById('addUserBtn').onclick = async () => {
-        const username = document.getElementById('newUser').value.trim();
-        const password = document.getElementById('newPass').value;
-        const credits = parseInt(document.getElementById('newCredits').value);
-        const is_blocked = document.getElementById('newBlocked').checked;
-        if (!username || !password) return alert('Username and password required');
-        const res = await fetch('/admin/user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-            body: JSON.stringify({ username, password, credits, is_blocked })
-        });
-        if (res.ok) {
-            loadUsers();
-            document.getElementById('newUser').value = '';
-            document.getElementById('newPass').value = '';
-            document.getElementById('newCredits').value = 10;
-            document.getElementById('newBlocked').checked = false;
-        } else {
-            const err = await res.json();
-            alert(err.error);
-        }
-    };
+  document.getElementById('addApiBtn').onclick = async () => {
+    const type = document.getElementById('apiType').value.trim();
+    const url = document.getElementById('apiUrl').value.trim();
+    const description = document.getElementById('apiDesc').value.trim();
+    const enabled = document.getElementById('apiEnabled').checked;
+    if (!type || !url) return alert('Type and URL required');
+    await apiCall('/admin/api-configs', { method: 'POST', body: JSON.stringify({ type, url, description, enabled }) });
+    loadApis();
+    document.getElementById('apiType').value = '';
+    document.getElementById('apiUrl').value = '';
+    document.getElementById('apiDesc').value = '';
+    showMsg('API added', 'success');
+  };
 
-    document.getElementById('logoutAdminBtn').onclick = () => {
-        localStorage.removeItem('adminToken');
-        location.reload();
-    };
+  document.getElementById('testApiBtn').onclick = async () => {
+    let url = document.getElementById('testUrl').value;
+    const query = document.getElementById('testQuery').value || 'test';
+    if (!url) return alert('Enter URL');
+    const resultDiv = document.getElementById('testResult');
+    resultDiv.innerHTML = '⏳ Testing...';
+    const res = await apiCall('/admin/test-api', { method: 'POST', body: JSON.stringify({ url, query }) });
+    if (res.success) resultDiv.innerHTML = `<pre>✅ Response:\n${JSON.stringify(res.data, null, 2)}</pre>`;
+    else resultDiv.innerHTML = `❌ Error: ${res.error}`;
+  };
+
+  // LOGS
+  async function loadLogs(userId = '') {
+    let url = '/admin/logs';
+    if (userId) url += `?userId=${userId}`;
+    const logs = await apiCall(url);
+    const tbody = document.querySelector('#logsTable tbody');
+    tbody.innerHTML = '';
+    logs.forEach(log => {
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = log.id;
+      row.insertCell(1).innerText = log.username || `User ${log.user_id}`;
+      row.insertCell(2).innerText = log.api_type;
+      row.insertCell(3).innerText = log.query;
+      row.insertCell(4).innerText = new Date(log.timestamp).toLocaleString();
+      let preview = '-';
+      try {
+        const resp = JSON.parse(log.response);
+        preview = JSON.stringify(resp).substring(0, 80) + '...';
+      } catch(e) { preview = (log.response || '').substring(0, 80); }
+      row.insertCell(5).innerHTML = `<span title="${log.response?.substring(0, 400)}">${preview}</span>`;
+    });
+  }
+
+  async function loadUserDropdown() {
+    const users = await apiCall('/admin/users');
+    const select = document.getElementById('logUserFilter');
+    select.innerHTML = '<option value="">All Users</option>';
+    users.forEach(u => { select.innerHTML += `<option value="${u.id}">${u.username}</option>`; });
+  }
+
+  document.getElementById('filterLogsBtn').onclick = () => {
+    const userId = document.getElementById('logUserFilter').value;
+    loadLogs(userId);
+  };
+
+  // ADMIN LOGIN
+  document.getElementById('adminLoginBtn').onclick = async () => {
+    const username = document.getElementById('adminUser').value.trim();
+    const password = document.getElementById('adminPass').value;
+    const pin = document.getElementById('adminPin').value.trim();
+    const securityKey = document.getElementById('adminKey').value.trim();
+    if (!username || !password || !pin || !securityKey) {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginError').innerText = 'All 4 fields required';
+      return;
+    }
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, pin, securityKey })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      adminToken = data.token;
+      localStorage.setItem('adminToken', adminToken);
+      loginDiv.style.display = 'none';
+      panelDiv.style.display = 'block';
+      loadDashboard(); loadUsers(); loadApis(); loadLogs(); loadUserDropdown();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginError').innerText = data.error || 'Invalid credentials';
+    }
+  };
+
+  function logoutAdmin() {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+  }
+  document.getElementById('logoutAdminBtn').onclick = logoutAdmin;
+
+  // Modal close
+  document.querySelector('.close').onclick = () => document.getElementById('editApiModal').style.display = 'none';
+  window.onclick = (e) => { if (e.target === document.getElementById('editApiModal')) document.getElementById('editApiModal').style.display = 'none'; };
 </script>
 </body>
 </html>
